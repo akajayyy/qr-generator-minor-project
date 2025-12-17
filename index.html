@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QR Code Generator – Minor Project</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'Poppins',sans-serif;
+      background:#121212;
+      transition:.3s;
+    }
+    body.light{background:#f2f4f7}
+
+    .app{
+      width:360px;
+      background:#fff;
+      border-radius:14px;
+      padding:20px;
+      box-shadow:0 15px 35px rgba(0,0,0,.25);
+      position:relative;
+    }
+
+    h1{text-align:center;margin:0;font-size:22px}
+    p{text-align:center;font-size:13px;color:#777;margin:6px 0 14px}
+
+    .theme{
+      position:absolute;top:14px;right:14px;
+      width:32px;height:32px;border-radius:50%;
+      border:none;cursor:pointer;font-size:15px;
+      background:#eee
+    }
+
+    label{font-size:14px;font-weight:500}
+    textarea,input,select{
+      width:100%;padding:10px;margin:6px 0 12px;
+      border-radius:8px;border:1px solid #ccc;font-family:inherit
+    }
+
+    .row{display:flex;gap:10px}
+
+    button.main{
+      width:100%;padding:12px;
+      border:none;border-radius:10px;
+      background:#4f46e5;color:#fff;
+      font-size:15px;font-weight:600;cursor:pointer
+    }
+
+    .qr-box{display:none;text-align:center;margin-top:14px}
+    canvas{background:#f3f3f3;padding:10px;border-radius:10px}
+
+    .actions{display:flex;gap:10px;margin-top:8px}
+    .actions button{
+      flex:1;padding:8px;border:none;border-radius:8px;cursor:pointer
+    }
+
+    ul{list-style:none;padding:0;margin:12px 0 0}
+    li{font-size:12px;padding:6px;border-bottom:1px solid #eee;cursor:pointer}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+</head>
+<body>
+
+<div class="app">
+  <button class="theme" id="theme">🌙</button>
+
+  <h1>QR Generator</h1>
+  <p>Clean & Working Minor Project</p>
+
+  <label>Text / URL</label>
+  <textarea id="text" rows="3" placeholder="Enter text or link"></textarea>
+
+  <div class="row">
+    <input id="size" type="number" value="240">
+    <select id="level">
+      <option value="L">Low</option>
+      <option value="M" selected>Medium</option>
+      <option value="Q">Q</option>
+      <option value="H">High</option>
+    </select>
+  </div>
+
+  <button class="main" id="generate">Generate QR</button>
+
+  <div class="qr-box" id="qrBox">
+    <canvas id="qr"></canvas>
+    <div class="actions">
+      <button id="download">Download</button>
+      <button id="clear">Clear</button>
+    </div>
+  </div>
+
+  <ul id="history"></ul>
+</div>
+
+<script>
+  const qr = new QRious({ element: document.getElementById('qr'), size:240 });
+  const text = document.getElementById('text');
+  const size = document.getElementById('size');
+  const level = document.getElementById('level');
+  const qrBox = document.getElementById('qrBox');
+  const historyEl = document.getElementById('history');
+
+  let history = JSON.parse(localStorage.getItem('qrHistory')) || [];
+
+  function renderHistory(){
+    historyEl.innerHTML='';
+    history.forEach(item=>{
+      const li=document.createElement('li');
+      li.textContent=item;
+      li.onclick=()=>{ text.value=item; generate(item); };
+      historyEl.appendChild(li);
+    });
+  }
+
+  function generate(val){
+    qr.set({ value:val, size:+size.value, level:level.value });
+    qrBox.style.display='block';
+  }
+
+  generateBtn = document.getElementById('generate');
+  generateBtn.onclick=()=>{
+    if(!text.value.trim()) return alert('Text daal');
+    generate(text.value.trim());
+    history=[text.value.trim(),...history.filter(x=>x!==text.value.trim())].slice(0,5);
+    localStorage.setItem('qrHistory',JSON.stringify(history));
+    renderHistory();
+  }
+
+  document.getElementById('download').onclick=()=>{
+    const a=document.createElement('a');
+    a.href=qr.toDataURL();a.download='qr.png';a.click();
+  }
+
+  document.getElementById('clear').onclick=()=>{
+    text.value='';qrBox.style.display='none';
+  }
+
+  document.getElementById('theme').onclick=()=>{
+    document.body.classList.toggle('light');
+    theme.textContent=document.body.classList.contains('light')?'☀️':'🌙';
+  }
+
+  renderHistory();
+</script>
+</body>
+</html>
